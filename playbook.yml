@@ -1,0 +1,66 @@
+---
+- hosts: ubuntu@35.192.102.56
+  vars:
+    project_repo: https://github.com/mavx/flask_test.git
+    project_location: ~
+    program_name: flast_test
+    cows: "{{ lookup('env', 'ANSIBLE_NOCOWS') }}"
+    home: "{{ lookup('env', 'HOME') }}"
+
+  tasks:
+    # - name: test github
+    #   command: ssh -T git@github.com
+    
+    - name: Get files
+      git:
+        accept_hostkey: yes
+        repo: "{{ project_repo }}"
+        dest: "{{ project_location }}"
+        version: master
+        update: yes
+    
+    - name: Install dependencies
+      pip:
+        requirements: "{{ project_location }}/requirements.txt"
+        virtualenv: "{{ project_location }}/env"
+
+    - name: Activate virtualenv
+      shell: "{{ project_location }}/env/bin/activate"
+
+    - name: Run app
+      shell: "python api.py"
+    # - name: Clone merc-data production
+    #   git:
+    #     accept_hostkey: yes
+    #     repo: "{{ project_repo }}"
+    #     dest: "{{ project_location }}"
+    #     version: master
+    #     update: yes
+    #   tags:
+    #     git
+
+    # - name: Clone merc-data beta
+    #   git:
+    #     accept_hostkey: yes
+    #     repo: "{{ project_repo }}"
+    #     dest: ~/merc-data-beta
+    #     version: beta
+    #     update: yes
+    #   tags:
+    #     git
+
+    # - name: Clone bi-scripts
+    #   git:
+    #     accept_hostkey: yes
+    #     repo: https://8430fa3853339b9ad5406c12ae4b9771c470c590@github.com/kfit-dev/bi-scripts.git
+    #     # repo: git@github.com:kfit-dev/bi-scripts.git
+    #     dest: ~/bi-scripts
+    #     update: yes
+    #   tags:
+    #     git
+
+    # - name: Append dummy text to file
+    #   shell: >
+    #     (echo {{ cows }} &&
+    #     echo {{ home }}) >> test.log
+    #   tags: nonsense
