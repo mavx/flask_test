@@ -1,8 +1,8 @@
 ---
-- hosts: ubuntu@35.192.102.56
+- hosts: 35.192.102.56
   vars:
     project_repo: https://github.com/mavx/flask_test.git
-    project_location: ~
+    project_location: ~/flask_test
     program_name: flast_test
     cows: "{{ lookup('env', 'ANSIBLE_NOCOWS') }}"
     home: "{{ lookup('env', 'HOME') }}"
@@ -10,25 +10,41 @@
   tasks:
     # - name: test github
     #   command: ssh -T git@github.com
+
+    - name: Setup environment
+      apt: name={{item}}
+      with_items:
+        - python-pip
+        - python3-pip
+      become: true
     
-    - name: Get files
+    - name: Install initial virtualenv
+      pip:
+        name: virtualenv
+      become: true
+    
+    - name: Clone repo
       git:
         accept_hostkey: yes
         repo: "{{ project_repo }}"
         dest: "{{ project_location }}"
         version: master
         update: yes
-    
+
     - name: Install dependencies
       pip:
         requirements: "{{ project_location }}/requirements.txt"
         virtualenv: "{{ project_location }}/env"
 
     - name: Activate virtualenv
-      shell: "{{ project_location }}/env/bin/activate"
+      shell: ". {{ project_location }}/env/bin/activate"
 
-    - name: Run app
-      shell: "python api.py"
+    - name: Run app in background
+      shell: "env/bin/python main.py"
+      args:
+        chdir: "{{ project_location }}"
+      async: 45
+      poll: 0
     # - name: Clone merc-data production
     #   git:
     #     accept_hostkey: yes
